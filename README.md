@@ -5,7 +5,7 @@ Made with HTML, CSS, and plain JavaScript
 Published at: https://noumanamalik.github.io/Recipe-Database/ 
 
 ### Featrues:
-- Uses an api (from: https://www.themealdb.com/api.php) To:
+- Uses an api (from: https://www.themealdb.com/api.php) to:
     - Show a random recipe
     - Search for any recipe
     - Obtain instructions, ingredients, and measurements for all recipes
