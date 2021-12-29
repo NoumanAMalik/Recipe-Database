@@ -1,4 +1,11 @@
-const meals = document.getElementById("meals");
+const mealsElement = document.getElementById("meals");
+const favoriteContainer = document.getElementById("fav-meals");
+const mealPopup = document.getElementById("meal-popup");
+const mealInfoElement = document.getElementById("meal-info");
+const popupCloseBtn = document.getElementById("close-popup");
+
+const searchTerm = document.getElementById("search-term");
+const searchBtn = document.getElementById("search");
 
 getRandomMeal();
 fetchFavoriteMeals();
@@ -15,13 +22,18 @@ async function getMealById(id) {
     const resp = await fetch("https://www.themealdb.com/api/json/v1/1/lookup.php?i=" + id);
 
     const respData = await resp.json();
-    const meal = respData.meals[0];
+    const meal = await respData.meals[0];
 
     return meal;    
 }
 
-async function getMealBySearch(term) {
-    const meals = await fetch("https://www.themealdb.com/api/json/v1/1/search.php?s=" + term);
+async function getMealsBySearch(term) {
+    const resp = await fetch("https://www.themealdb.com/api/json/v1/1/search.php?s=" + term);
+
+    const respData = await resp.json();
+    const meals = respData.meals;
+
+    return meals;
 }
 
 function addMeal(mealData, random = false) {
@@ -47,9 +59,15 @@ function addMeal(mealData, random = false) {
             addMealToLocalStorage(mealData.idMeal);
             btn.classList.toggle("active");
         }
+
+        fetchFavoriteMeals();
     });
 
-    meals.appendChild(meal);
+    meal.addEventListener("click", () => {
+        showMealInfo(mealData);
+    })
+
+    mealsElement.appendChild(meal);
 }
 
 function addMealToLocalStorage(mealId) {
@@ -71,17 +89,93 @@ function getMealsFromLocalStorage() {
 }
 
 async function fetchFavoriteMeals() {
+    // Clear the container
+    favoriteContainer.innerHTML = "";
     const mealIds = getMealsFromLocalStorage();
-
-    const meals = [];
 
     for (let i = 0; i < mealIds.length; i ++) {
         const mealId = mealIds[i];
         meal = await getMealById(mealId);
-        meals.push(meal);
+
+        addMealToFav(meal);
+    }
+}
+
+function addMealToFav(mealData) {
+    const favMeal = document.createElement('li');
+    favMeal.innerHTML = `
+    <li><img src="${mealData.strMealThumb}" alt="${mealData.strMeal}"><span>${mealData.strMeal}</span></li>
+    <button class="clear"><i class="fas fa-window-close"></i></button>
+    `;
+    const btn = favMeal.querySelector(".clear");
+
+    btn.addEventListener('click', () => {
+        removeMealFromLocalStorage(mealData.idMeal);
+
+        fetchFavoriteMeals();
+    })
+
+    favMeal.addEventListener("click", () => {
+        showMealInfo(mealData);
+    })
+
+    favoriteContainer.appendChild(favMeal);
+}
+
+function showMealInfo(mealData) {
+    // Clear the previous meal
+    mealInfoElement.innerHTML = "";
+
+    // Update the meal info
+    const mealElement = document.createElement("div");
+
+    const ingredients = [];
+
+    // Get ingredients and measurements
+    for (let i = 1; i < 20; i ++) {
+        if (mealData["strIngredient" + i]) {
+            ingredients.push(`${mealData["strIngredient" + i]} - ${mealData["strMeasure" + i]}`);
+        } else {
+            break;
+        }
     }
 
-    console.log(meals);
+    mealElement.innerHTML = `
+        <h1>${mealData.strMeal}</h1>
+        <img src="${mealData.strMealThumb}" alt="${mealData.strMeal}">
+        <p>${mealData.strInstructions}</p>
+        <h3>Ingredients</h3>
+        <ul>
+            ${ingredients
+                .map(
+                    (ing) => `
+            <li>${ing}</li>
+            `)
+                .join("")}
+        </ul>
+    `;
 
-    //TODO: Add them to the screen
+    mealInfoElement.appendChild(mealElement);
+
+    // Show the popup
+    mealPopup.classList.remove("hidden");
 }
+
+searchBtn.addEventListener("click", async () => {
+    // Clean the container
+    mealsElement.innerHTML = "";
+
+    const search = searchTerm.value;
+
+    const meals = await getMealsBySearch(search);
+
+    if (meals) { // If there are meals then show | this is to prevent error for looping through a null array
+        meals.forEach(meal => {
+            addMeal(meal);
+        });
+    }
+});
+
+popupCloseBtn.addEventListener("click", () => {
+    mealPopup.classList.add("hidden");
+});
