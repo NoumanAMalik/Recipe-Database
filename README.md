@@ -2,6 +2,7 @@
 
 This project was made by loosely following a tutorial to help me learn about Web Dev  
 Made with HTML, CSS, and plain JavaScript  
+Published at: https://noumanamalik.github.io/Recipe-Database/ 
 
 ### Featrues:
 - Uses an api (from: https://www.themealdb.com/api.php) To:
